@@ -16,25 +16,21 @@ public class GridPlayer : NetworkBehaviour
     public bool isClicked = false;
     private Button gridbtn;
     private Image gridimg;
-    private NetworkObject networkObject;
     private void Awake()
     {
         gridbtn = GetComponent<Button>();
         gridimg = GetComponent<Image>();
-        networkObject=GetComponent<NetworkObject>();
         gridimg.color = new Color(1, 1, 1, 0);
     }
     private void Start()
     {
-        networkObject.Spawn(true);
-        Debug.Log("wadih");
         gridbtn.onClick.AddListener(() =>
         {
-            Play();
-            
+            PlayRpc();
         });
-    }
-    private void Play()
+    } 
+    [Rpc(SendTo.Everyone)]
+    private void PlayRpc()
     {
         PlayerType playertype = GridMgr.Instance.playertype;
         if (!isClicked)
@@ -49,6 +45,7 @@ public class GridPlayer : NetworkBehaviour
                 gridimg.sprite =GridMgr.Instance.circle;
             }
             isClicked = true;
+            GridMgr.Instance.ChangePlayer();
         }
     }
     public void ResetGrid()
