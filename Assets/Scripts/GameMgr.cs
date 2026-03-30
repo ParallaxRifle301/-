@@ -23,7 +23,6 @@ public class GameMgr : MonoBehaviour
     {
         Init();
     }
-
     private void Init()
     {
         serverBtn.onClick.AddListener(() =>

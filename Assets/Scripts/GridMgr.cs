@@ -4,53 +4,72 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class GridMgr 
+public class GridMgr:NetworkBehaviour
 {
     private static GridMgr instance;
-    public static GridMgr Instance
-    {
-        get
-        {
-            if (instance == null)
-                instance = new GridMgr();
-            return instance;
-        }
-    }
+    public static GridMgr Instance => instance;
 
-    private GridMgr()
+    private void Awake()
     {
+        instance = this;
         Onint();
     }
     public Sprite circle;
     public Sprite cross;
-    public PlayerType playertype;
+    public NetworkVariable<PlayerType> currentplayertype=new NetworkVariable<PlayerType>();
+    public PlayerType localplayertype;
+    
     private void Onint()
     {
-        
-        if (NetworkManager.Singleton.StartClient())
-        {
-            Debug.Log("Client started");
-        }
-        else
-        {
-            Debug.Log("Client stopped");
-        }
-        
         circle = Resources.Load<Sprite>("Textures/Circle");
         cross = Resources.Load<Sprite>("Textures/Cross");
     }
 
-    public void ChangePlayer()
+    public override void OnNetworkSpawn()
     {
-        if (playertype == PlayerType.Cross)
+        // Debug.Log("OnNetworkSpawn");
+        // if (NetworkManager.Singleton.LocalClientId==0)
+        // {
+        //     Debug.Log("OnNetworkSpawn");
+        //     currentplayertype.Value = PlayerType.Circle;
+        // }
+        // else
+        // {
+        //     Debug.Log("OnNetworkSpawn");
+        //     currentplayertype.Value = PlayerType.Cross;
+        // }
+        // Debug.Log("OnNetworkSpawn");
+        if (IsClient)
         {
-            playertype = PlayerType.Circle;
+            localplayertype = 
+                NetworkManager.Singleton.LocalClientId==0?PlayerType.Cross: PlayerType.Circle;
         }
-        else
+
+        if (IsServer)
         {
-            playertype = PlayerType.Cross;
+            currentplayertype.Value = localplayertype;
         }
         
+    }
+    
+    public bool canPlay()
+    {
+        return currentplayertype.Value == localplayertype;
+    }
+    [Rpc(SendTo.Server)]
+    public void ChangePlayerRpc()
+    {
+        if (IsServer)
+        {
+            if (currentplayertype.Value == PlayerType.Cross)
+            {
+                currentplayertype.Value = PlayerType.Circle;
+            }
+            else
+            {
+                currentplayertype.Value = PlayerType.Cross;
+            }
+        }
     }
     
     public List<GridPlayer> players=new List<GridPlayer>();

@@ -13,7 +13,7 @@ public class GridPlayer : NetworkBehaviour
 {
     [SerializeField] private int x;
     [SerializeField] private int y;
-    public bool isClicked = false;
+    public NetworkVariable<bool> isClicked = new  NetworkVariable<bool>();
     private Button gridbtn;
     private Image gridimg;
     private void Awake()
@@ -22,35 +22,61 @@ public class GridPlayer : NetworkBehaviour
         gridimg = GetComponent<Image>();
         gridimg.color = new Color(1, 1, 1, 0);
     }
+
     private void Start()
     {
         gridbtn.onClick.AddListener(() =>
         {
-            PlayRpc();
+            if (GridMgr.Instance.canPlay() && !isClicked.Value)
+            {
+                
+                PlayServerRpc();
+                
+            }
+                
         });
     } 
-    [Rpc(SendTo.Everyone)]
-    private void PlayRpc()
+    [Rpc(SendTo.Server)]
+    private void PlayServerRpc()
     {
-        PlayerType playertype = GridMgr.Instance.playertype;
-        if (!isClicked)
-        {
-            gridimg.color = new Color(1, 1, 1, 1);
-            if (playertype == PlayerType.Cross)
-            {
-                gridimg.sprite = GridMgr.Instance.cross;
-            }
-            else
-            {
-                gridimg.sprite =GridMgr.Instance.circle;
-            }
-            isClicked = true;
-            GridMgr.Instance.ChangePlayer();
-        }
+        // ulong clientId = rpcParams.Receive.SenderClientId;
+        // PlayerType requesterType = clientId == 0 ? PlayerType.Circle : PlayerType.Cross;
+        //
+        // if (GridMgr.Instance.currentplayertype.Value != requesterType || isClicked)
+        //     return;
+        // if (GridMgr.Instance.canPlay() && !isClicked)
+        // {
+        //     Debug.Log("Play Grid");
+        //     PlayerType playertype = GridMgr.Instance.currentplayertype.Value;
+        //     ChangeSpriteRpc(playertype);
+        // }
+        isClicked.Value = true;
+        ChangeSpriteRpc();
     }
+    [Rpc(SendTo.Everyone)]
+    private void ChangeSpriteRpc()
+    {
+        PlayerType playertype = GridMgr.Instance.currentplayertype.Value;
+        gridimg.color = new Color(1, 1, 1, 1);
+        if (playertype == PlayerType.Cross)
+        {
+            gridimg.sprite = GridMgr.Instance.cross;
+        }
+        else
+        {
+            gridimg.sprite =GridMgr.Instance.circle;
+        }
+
+        if (IsServer)
+        {
+            GridMgr.Instance.ChangePlayerRpc();
+        }
+        
+    }
+    
     public void ResetGrid()
     {
-        isClicked = false;
+        isClicked.Value = false;
         gridimg.sprite = null;
     }
 }
