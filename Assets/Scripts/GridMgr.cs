@@ -69,6 +69,7 @@ public class GridMgr:NetworkBehaviour
             {
                 currentplayertype.Value = PlayerType.Cross;
             }
+            PlayerScoreView.Instance.SetActiveRpc(currentplayertype.Value);
         }
     }
     
