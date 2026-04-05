@@ -4,10 +4,15 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class GridMgr:NetworkBehaviour
+public interface INetworkSpawnInit
+{
+    public abstract void INetworkSpawnInit();
+}
+public class GridMgr:NetworkBehaviour,INetworkSpawnInit
 {
     private static GridMgr instance;
     public static GridMgr Instance => instance;
+    private event Action OnGameStart;
 
     private void Awake()
     {
@@ -24,7 +29,7 @@ public class GridMgr:NetworkBehaviour
         circle = Resources.Load<Sprite>("Textures/Circle");
         cross = Resources.Load<Sprite>("Textures/Cross");
     }
-
+    
     public override void OnNetworkSpawn()
     {
         // Debug.Log("OnNetworkSpawn");
@@ -39,19 +44,10 @@ public class GridMgr:NetworkBehaviour
         //     currentplayertype.Value = PlayerType.Cross;
         // }
         // Debug.Log("OnNetworkSpawn");
-        if (IsClient)
-        {
-            localplayertype = 
-                NetworkManager.Singleton.LocalClientId==0?PlayerType.Cross: PlayerType.Circle;
-        }
-
-        if (IsServer)
-        {
-            currentplayertype.Value = localplayertype;
-        }
-        
+        OnGameStart += INetworkSpawnInit;
+        OnGameStart+=PlayerScoreView.Instance.INetworkSpawnInit;
+        OnGameStart?.Invoke();
     }
-    
     public bool canPlay()
     {
         return currentplayertype.Value == localplayertype;
@@ -79,6 +75,19 @@ public class GridMgr:NetworkBehaviour
         foreach (GridPlayer player in players)
         {
             player.ResetGrid();
+        }
+    }
+
+    public void INetworkSpawnInit()
+    {
+        if (IsClient)
+        {
+            localplayertype = 
+                NetworkManager.Singleton.LocalClientId==0?PlayerType.Cross: PlayerType.Circle;
+        }
+        if (IsServer)
+        {
+            currentplayertype.Value = localplayertype;
         }
     }
 }

@@ -6,7 +6,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerScoreView :NetworkBehaviour
+public class PlayerScoreView :NetworkBehaviour,INetworkSpawnInit
 {
     private static PlayerScoreView instance;
     public static PlayerScoreView Instance => instance;
@@ -27,13 +27,8 @@ public class PlayerScoreView :NetworkBehaviour
     {
         
     }
-
-    public void UpdatePlayerImage()
+    public void UpdatePlayerText()
     {
-        if (GridMgr.Instance.canPlay())
-        {
-            
-        }
     }
     [Rpc(SendTo.Everyone)]
     public void SetActiveRpc(PlayerType playerType)
@@ -48,8 +43,18 @@ public class PlayerScoreView :NetworkBehaviour
             CircleImg.gameObject.SetActive(false);
             CrossImg.gameObject.SetActive(true);
         }
-            
-        
+    }
+
+    public void INetworkSpawnInit()
+    {
+        if (GridMgr.Instance.localplayertype == PlayerType.Circle)
+        {
+            CrossNme.gameObject.SetActive(false);
+        }
+        else
+        {
+            CircleNme.gameObject.SetActive(false);
+        }
     }
 }
 public class PlayerScoreData

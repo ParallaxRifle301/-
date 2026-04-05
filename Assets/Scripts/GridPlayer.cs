@@ -29,13 +29,11 @@ public class GridPlayer : NetworkBehaviour
         {
             if (GridMgr.Instance.canPlay() && !isClicked.Value)
             {
-                
                 PlayServerRpc();
-                
             }
-                
         });
-    } 
+    }
+    
     [Rpc(SendTo.Server)]
     private void PlayServerRpc()
     {
@@ -71,9 +69,7 @@ public class GridPlayer : NetworkBehaviour
         {
             GridMgr.Instance.ChangePlayerRpc();
         }
-        
     }
-    
     public void ResetGrid()
     {
         isClicked.Value = false;
